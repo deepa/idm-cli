@@ -5,7 +5,7 @@
   "commands": [
     {
       "name": "identity-management",
-      "aliases": ["idm"],
+      "aliases": ["iam"],
       "version": "0.1.0",
       "description": "Access Akamai Identity Management application"
     }

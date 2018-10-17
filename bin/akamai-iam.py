@@ -19,7 +19,7 @@ Initiators: vbhat@akamai.com, aetsai@akamai.com, mkilmer@akamai.com
 """
 
 import json
-from idmwrapper import identityManagement
+from iamwrapper import identityManagement
 import argparse
 import requests
 import os
@@ -36,7 +36,7 @@ PACKAGE_VERSION = "0.1.0"
 # Setup logging
 if not os.path.exists('logs'):
     os.makedirs('logs')
-log_file = os.path.join('logs', 'akamai-idm.log')
+log_file = os.path.join('logs', 'akamai-iam.log')
 
 # Set the format of logging in console and file separately
 log_formatter = logging.Formatter(
@@ -68,7 +68,7 @@ def init_config(edgerc_file, section):
 
     if not section:
         if not os.getenv("AKAMAI_EDGERC_SECTION"):
-            section = "idm"
+            section = "iam"
         else:
             section = os.getenv("AKAMAI_EDGERC_SECTION")
 
@@ -96,7 +96,7 @@ def cli():
         prog += " [command]"
 
     parser = argparse.ArgumentParser(
-        description='Akamai CLI for IDM',
+        description='Akamai CLI for IAM',
         add_help=False,
         prog=prog)
     parser.add_argument(
@@ -118,16 +118,26 @@ def cli():
         metavar="",
         nargs=argparse.REMAINDER)
 
-    actions["list_contexts"] = create_sub_command(
-        subparsers, "list-contexts", "List all available contexts that the identity can manage",
+    actions["list_account_switch_keys"] = create_sub_command(
+        subparsers, "list-account-switch-keys", "List the accountSwitchKeys and account names you can access based on the permissions of your API client",
         [{"name": "search", "help": "Use this to filter results by accountId or accountName. Enter at least three characters in the string to filter the results."},
         {"name": "json", "help": "output format in json"}],
         [{"name": "open-identity-id", "help": "A unique identifier for each API client"}])
 
     actions["list_credentials"] = create_sub_command(
-        subparsers, "list-credentials", "List all credentials for this identity",
+        subparsers, "list-credentials", "Get an API client’s credentials",
         [{"name": "actions", "help": "Include to get the actions that can be preformed on this credential", "action":"store_true"}],
         [{"name": "open-identity-id", "help": "A unique identifier for each API client"}])
+
+    actions["get_credential"] = create_sub_command(
+        subparsers, "get-credential", "Get details for a single credential",
+        [{"name": "actions", "help": "Optionally enable actions to include them as part of the response object", "action":"store_true"}],
+        [{"name": "open-identity-id", "help": "A unique identifier for each API client"}, {"name": "credential-id", "help": "A credential’s unique identifier"}])
+
+    actions["get_client"] = create_sub_command(
+        subparsers, "get-client", "View an API client’s details",
+        [{"name": "actions", "help": "Include to get the actions that can be preformed on this credential", "action":"store_true"}],
+        [{"name": "access-token", "help": "An access token identifies a collection of APIs belonging to an API client"}])
 
     args = parser.parse_args()
 
@@ -197,7 +207,7 @@ def create_sub_command(
     optional.add_argument(
         "--section",
         help="Section of the credentials file [$AKAMAI_EDGERC_SECTION]",
-        default="idm")
+        default="iam")
 
     optional.add_argument(
         "--debug",
@@ -205,6 +215,7 @@ def create_sub_command(
         action="store_true")
 
     return action
+
 
 def list_credentials(args):
     base_url, session = init_config(args.edgerc, args.section)
@@ -218,10 +229,11 @@ def list_credentials(args):
             'There was error in fetching response. Use --debug for more information.')
         root_logger.debug(json.dumps(response.json(), indent=4))
 
-def list_contexts(args):
+
+def list_account_switch_keys(args):
     base_url, session = init_config(args.edgerc, args.section)
     identityManagementObject = identityManagement(base_url)
-    response = identityManagementObject.list_contexts(session, args.open_identity_id, args.search)
+    response = identityManagementObject.list_account_switch_keys(session, args.open_identity_id, args.search)
 
     if response.status_code == 200:
 
@@ -248,10 +260,35 @@ def list_contexts(args):
         root_logger.debug(json.dumps(response.json(), indent=4))
 
 
+def get_credential(args):
+    base_url, session = init_config(args.edgerc, args.section)
+    identityManagementObject = identityManagement(base_url)
+    response = identityManagementObject.get_credential(session, args.open_identity_id, args.credential_id, args.actions)
+
+    if response.status_code != 200:
+        root_logger.info(
+            'There was error in fetching response. Use --debug for more information.')
+
+    root_logger.info(json.dumps(response.json(), indent=4))
+
+
+def get_client(args):
+    base_url, session = init_config(args.edgerc, args.section)
+    identityManagementObject = identityManagement(base_url)
+    response = identityManagementObject.get_client(session, args.access_token, args.actions)
+
+    if response.status_code == 200:
+        root_logger.info(json.dumps(response.json(), indent=4))
+    else:
+        root_logger.info(
+            'There was error in fetching response. Use --debug for more information.')
+        root_logger.debug(json.dumps(response.json(), indent=4))
+
+
 def get_prog_name():
     prog = os.path.basename(sys.argv[0])
     if os.getenv("AKAMAI_CLI"):
-        prog = "akamai idm"
+        prog = "akamai iam"
     return prog
 
 
