@@ -80,7 +80,7 @@ The arguments available for this command are:
 
 ```
 --open-identity-id <value>  A unique identifier for each API client
---credential-id             A credential’s unique identifier.
+--credential-id  <value>    A credential’s unique identifier.
 --actions                   Optionally include actions option to get available actions that can be performed on the credential
 ```
 
