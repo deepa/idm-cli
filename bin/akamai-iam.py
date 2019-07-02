@@ -121,18 +121,19 @@ def cli():
     actions["list_account_switch_keys"] = create_sub_command(
         subparsers, "list-account-switch-keys", "List the accountSwitchKeys and account names you can access based on the permissions of your API client",
         [{"name": "search", "help": "Use this to filter results by accountId or accountName. Enter at least three characters in the string to filter the results."},
-        {"name": "json", "help": "output format in json"}],
-        [{"name": "open-identity-id", "help": "A unique identifier for each API client"}])
+        {"name": "json", "help": "output format in json"},
+        {"name": "open-identity-id", "help": "A unique identifier for each API client"}])
 
     actions["list_credentials"] = create_sub_command(
         subparsers, "list-credentials", "Get an API client’s credentials",
-        [{"name": "actions", "help": "Include to get the actions that can be preformed on this credential", "action":"store_true"}],
-        [{"name": "open-identity-id", "help": "A unique identifier for each API client"}])
+        [{"name": "actions", "help": "Include to get the actions that can be preformed on this credential", "action":"store_true"},
+        {"name": "open-identity-id", "help": "A unique identifier for each API client"}])
 
     actions["get_credential"] = create_sub_command(
         subparsers, "get-credential", "Get details for a single credential",
-        [{"name": "actions", "help": "Optionally enable actions to include them as part of the response object", "action":"store_true"}],
-        [{"name": "open-identity-id", "help": "A unique identifier for each API client"}, {"name": "credential-id", "help": "A credential’s unique identifier"}])
+        [{"name": "actions", "help": "Optionally enable actions to include them as part of the response object", "action":"store_true"},
+        {"name": "open-identity-id", "help": "A unique identifier for each API client"}],
+        [{"name": "credential-id", "help": "A credential’s unique identifier"}])
 
     actions["get_client"] = create_sub_command(
         subparsers, "get-client", "View an API client’s details",
@@ -160,7 +161,6 @@ def cli():
         root_logger.setLevel(logging.DEBUG)
 
     return getattr(sys.modules[__name__], args.command.replace("-", "_"))(args)
-
 
 def create_sub_command(
         subparsers,
@@ -218,9 +218,14 @@ def create_sub_command(
 
 
 def list_credentials(args):
-    base_url, session = init_config(args.edgerc, args.section)
+    base_url, session, access_token = init_config(args.edgerc, args.section)
     identityManagementObject = identityManagement(base_url)
-    response = identityManagementObject.list_credentials(session, args.open_identity_id, args.actions)
+    open_identity_id = args.open_identity_id
+    if not open_identity_id:
+        open_client = identityManagementObject.get_client(session, access_token).json()
+        open_identity_id = open_client["identity"]["openIdentityId"]
+
+    response = identityManagementObject.list_credentials(session, open_identity_id, args.actions)
 
     if response.status_code == 200:
         root_logger.info(json.dumps(response.json(), indent=4))
@@ -231,9 +236,14 @@ def list_credentials(args):
 
 
 def list_account_switch_keys(args):
-    base_url, session = init_config(args.edgerc, args.section)
+    base_url, session, access_token = init_config(args.edgerc, args.section)
     identityManagementObject = identityManagement(base_url)
-    response = identityManagementObject.list_account_switch_keys(session, args.open_identity_id, args.search)
+    open_identity_id = args.open_identity_id
+    if not open_identity_id:
+        open_client = identityManagementObject.get_client(session, access_token).json()
+        open_identity_id = open_client["identity"]["openIdentityId"]
+
+    response = identityManagementObject.list_account_switch_keys(session, open_identity_id, args.search)
 
     if response.status_code == 200:
 
@@ -261,16 +271,20 @@ def list_account_switch_keys(args):
 
 
 def get_credential(args):
-    base_url, session = init_config(args.edgerc, args.section)
+    base_url, session, access_token = init_config(args.edgerc, args.section)
     identityManagementObject = identityManagement(base_url)
-    response = identityManagementObject.get_credential(session, args.open_identity_id, args.credential_id, args.actions)
+    open_identity_id = args.open_identity_id
+    if not open_identity_id:
+        open_client = identityManagementObject.get_client(session, access_token).json()
+        open_identity_id = open_client["identity"]["openIdentityId"]
+
+    response = identityManagementObject.get_credential(session, open_identity_id, args.credential_id, args.actions)
 
     if response.status_code != 200:
         root_logger.info(
             'There was error in fetching response. Use --debug for more information.')
 
     root_logger.info(json.dumps(response.json(), indent=4))
-
 
 def get_client(args):
     base_url, session, access_token = init_config(args.edgerc, args.section)

@@ -43,13 +43,13 @@ This is the main program that wraps this functionality in a command line utility
 Use this command to retrieve the accountSwitchKeys and account names you can access based on the permissions of your API client. Once you have the accountSwitchKeys you need, you can [make an API call to another account](https://learn.akamai.com/en-us/learn_akamai/getting_started_with_akamai_developers/developer_tools/accountSwitch.html#makeapicalls).
 
 ```bash
-%  akamai iam list-account-switch-keys --open-identity-id pa444oyidwo6j4hy
+$  akamai iam list-account-switch-keys --open-identity-id pa444oyidwo6j4hy
 ```
 
 The arguments available for this command are:
 
 ```
---open-identity-id <value>  A unique identifier for each API client.
+--open-identity-id <value>  A unique identifier for each API client. Defaults to the id of the current client
 --search <value>            Optionally filter results by accountId or accountName. Enter at least three characters in the string to filter the results.
 --json                      Display output in json format (optional)
 ```
@@ -59,13 +59,13 @@ The arguments available for this command are:
 Use this command to get an API client’s credentials
 
 ```bash
-%  akamai iam list-credentials --open-identity-id pa444oyidwo6j4hy
+$  akamai iam list-credentials --open-identity-id pa444oyidwo6j4hy
 ```
 
 The argument needed for this command is:
 
 ```
---open-identity-id <value>  A unique identifier for each API client.
+--open-identity-id <value>  A unique identifier for each API client. Defaults to the id of the current client.
 --actions                   Optionally include actions option to get available actions that can be performed on the credentials
 ```
 
@@ -74,13 +74,13 @@ The argument needed for this command is:
 Get details for a single credential. Use Update a credential to change the credential’s expiration date, or toggle the credential’s activation status.
 
 ```bash
-%  akamai iam get-credential --open-identity-id pa444oyidwo6j4hy --credential-id 345678
+$  akamai iam get-credential --open-identity-id pa444oyidwo6j4hy --credential-id 345678
 ```
 
 The arguments available for this command are:
 
 ```
---open-identity-id <value>  A unique identifier for each API client
+--open-identity-id <value>  A unique identifier for each API client. Defaults to the id of the current client
 --credential-id  <value>    A credential’s unique identifier.
 --actions                   Optionally include actions option to get available actions that can be performed on the credential
 ```
@@ -91,12 +91,12 @@ The arguments available for this command are:
 View an API client’s details. This operation lets you get a specific API client by passing the client’s token in the command.
 
 ```bash
-%  akamai iam get-client --access-token akaa-onah2fsgph6i7sx2-j4vrsb3rbyqxuslo
+$  akamai iam get-client --access-token akaa-onah2fsgph6i7sx2-j4vrsb3rbyqxuslo
 ```
 
 The arguments available for this command are:
 
 ```
---access-token <value>  An access token identifies a collection of APIs belonging to an API client. Defaults to the access token of the current credential
+--access-token <value>  An access token identifies a collection of APIs belonging to an API client. Defaults to the access token of the current client
 --actions               Optionally include actions option to get available actions that can be performed on the client
 ```
