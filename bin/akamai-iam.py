@@ -15,7 +15,7 @@ Copyright 2017 Akamai Technologies, Inc. All Rights Reserved.
 """
 This code leverages akamai OPEN API. to control Certificates deployed in Akamai Network.
 In case you need quick explanation contact the initiators.
-Initiators: vbhat@akamai.com, aetsai@akamai.com, mkilmer@akamai.com
+Initiators: dthiagar@akamai.com, rpunjabi@akamai.com
 """
 
 import json
@@ -75,11 +75,12 @@ def init_config(edgerc_file, section):
     try:
         edgerc = EdgeRc(edgerc_file)
         base_url = edgerc.get(section, 'host')
+        access_token = edgerc.get(section, 'access_token')
 
         session = requests.Session()
         session.auth = EdgeGridAuth.from_edgerc(edgerc, section)
 
-        return base_url, session
+        return base_url, session, access_token
     except configparser.NoSectionError:
         root_logger.error("Edgerc section \"%s\" not found" % section)
         exit(1)
@@ -88,7 +89,6 @@ def init_config(edgerc_file, section):
             "Unknown error occurred trying to read edgerc file (%s)" %
             edgerc_file)
         exit(1)
-
 
 def cli():
     prog = get_prog_name()
@@ -136,8 +136,8 @@ def cli():
 
     actions["get_client"] = create_sub_command(
         subparsers, "get-client", "View an API client’s details",
-        [{"name": "actions", "help": "Include to get the actions that can be preformed on this credential", "action":"store_true"}],
-        [{"name": "access-token", "help": "An access token identifies a collection of APIs belonging to an API client"}])
+        [{"name": "actions", "help": "Include to get the actions that can be preformed on this credential", "action":"store_true"},
+        {"name": "access-token", "help": "An access token identifies a collection of APIs belonging to an API client"}])
 
     args = parser.parse_args()
 
@@ -273,9 +273,13 @@ def get_credential(args):
 
 
 def get_client(args):
-    base_url, session = init_config(args.edgerc, args.section)
+    base_url, session, access_token = init_config(args.edgerc, args.section)
     identityManagementObject = identityManagement(base_url)
-    response = identityManagementObject.get_client(session, args.access_token, args.actions)
+
+    if args.access_token: 
+        response = identityManagementObject.get_client(session, args.access_token, args.actions)
+    else:
+        response = identityManagementObject.get_client(session, access_token, args.actions)
 
     if response.status_code == 200:
         root_logger.info(json.dumps(response.json(), indent=4))
@@ -283,7 +287,6 @@ def get_client(args):
         root_logger.info(
             'There was error in fetching response. Use --debug for more information.')
         root_logger.debug(json.dumps(response.json(), indent=4))
-
 
 def get_prog_name():
     prog = os.path.basename(sys.argv[0])

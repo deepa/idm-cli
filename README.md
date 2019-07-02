@@ -66,6 +66,7 @@ The argument needed for this command is:
 
 ```
 --open-identity-id <value>  A unique identifier for each API client.
+--actions                   Optionally include actions option to get available actions that can be performed on the credentials
 ```
 
 ### get-credential
@@ -96,6 +97,6 @@ View an API client’s details. This operation lets you get a specific API clien
 The arguments available for this command are:
 
 ```
---access-token <value>  An access token identifies a collection of APIs belonging to an API client.
+--access-token <value>  An access token identifies a collection of APIs belonging to an API client. Defaults to the access token of the current credential
 --actions               Optionally include actions option to get available actions that can be performed on the client
 ```
